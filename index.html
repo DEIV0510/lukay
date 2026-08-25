@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#181310" />
+
+    <title>LUKAY | Calzado Femenino Colombiano</title>
+    <meta
+      name="description"
+      content="Descubre LUKAY, calzado femenino colombiano. Baletas, slingbacks, tacones, mocasines y accesorios diseñados para mujeres con estilo propio."
+    />
+    <meta name="author" content="LUKAY Calzado y Accesorios" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lukaycalzado.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LUKAY" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:title" content="LUKAY | Calzado Femenino Colombiano" />
+    <meta
+      property="og:description"
+      content="Diseño colombiano. Manos colombianas. Tu propio estilo. Baletas, slingbacks, tacones y mocasines hechos en Colombia."
+    />
+    <meta property="og:image" content="/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:url" content="https://lukaycalzado.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" type="image/png" href="/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap"
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ClothingStore",
+        "name": "LUKAY Calzado y Accesorios",
+        "description": "Fabricantes colombianos de calzado femenino: baletas, slingbacks, tacones y mocasines.",
+        "url": "https://lukaycalzado.com/",
+        "telephone": "+573135054610",
+        "areaServed": "CO",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Cali / Palmira",
+          "addressCountry": "CO"
+        },
+        "sameAs": [
+          "https://www.tiktok.com/@lukaycalzado",
+          "https://www.facebook.com/profile.php?id=100000000000000"
+        ]
+      }
+    </script>
+
+    <style>
+      /* ── Pantalla de carga ──────────────────────────────────────────────
+         Fuera de React para pintarse en el primer fotograma. Fondo negro,
+         wordmark LUKAY centrado, fade-in ~0.9s. Nada de esto retrasa la
+         carga real de la página: solo se ve mientras React monta.         */
+      html { background: #181310; }
+
+      #lk-boot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        background: #181310;
+        transition: opacity .5s ease, visibility .5s ease;
+      }
+      #lk-boot[data-hide='true'] { opacity: 0; visibility: hidden; pointer-events: none; }
+
+      .lk-boot__mark {
+        animation: lk-fade-in .9s cubic-bezier(0.16,1,0.3,1) both;
+      }
+      .lk-boot__logo {
+        width: min(220px, 52vw);
+        height: auto;
+        display: block;
+      }
+      @keyframes lk-fade-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      @media (prefers-reduced-motion: reduce) {
+        .lk-boot__mark { animation: none; opacity: 1; transform: none; }
+      }
+    </style>
+  </head>
+  <body class="bg-marfil text-ink">
+    <!-- Pantalla de carga: logo oficial LUKAY (public/brand/logo-full) -->
+    <div id="lk-boot" role="status" aria-live="polite" aria-label="Cargando LUKAY">
+      <div class="lk-boot__mark">
+        <img class="lk-boot__logo" src="/brand/logo-full.webp" alt="LUKAY Calzado y Accesorios" width="368" height="397" />
+      </div>
+    </div>
+
+    <noscript>
+      <div style="padding: 40px; font-family: system-ui">
+        <h1>LUKAY — Calzado y Accesorios</h1>
+        <p>Activa JavaScript para ver la tienda, o escríbenos por WhatsApp al 313 505 4610.</p>
+      </div>
+    </noscript>
+
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
