@@ -37,7 +37,7 @@ export default function Gallery({ images, productName }: GalleryProps) {
       {/* Imagen principal — desktop con zoom al hover */}
       <div className="hidden flex-1 sm:block">
         <div
-          className="relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-card bg-crema-dark/40"
+          className="relative aspect-[4/5] cursor-zoom-in overflow-hidden rounded-card bg-marfil-soft"
           onMouseEnter={() => setZooming(true)}
           onMouseLeave={() => setZooming(false)}
           onMouseMove={onMouseMove}
@@ -61,7 +61,7 @@ export default function Gallery({ images, productName }: GalleryProps) {
           <button
             key={img.card}
             onClick={() => setActive(i)}
-            className={`aspect-[4/5] overflow-hidden rounded-card bg-crema-dark/40 ring-1 transition-all ${
+            className={`aspect-[4/5] overflow-hidden rounded-card bg-marfil-soft ring-1 transition-all ${
               i === active ? 'ring-2 ring-ink' : 'ring-ink/10 hover:ring-ink/30'
             }`}
           >
@@ -75,7 +75,7 @@ export default function Gallery({ images, productName }: GalleryProps) {
         <div
           ref={mobileScrollRef}
           onScroll={onMobileScroll}
-          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-card bg-crema-dark/40"
+          className="no-scrollbar flex snap-x snap-mandatory overflow-x-auto rounded-card bg-marfil-soft"
         >
           {images.map((img, i) => (
             <div key={img.full} className="aspect-[4/5] w-full shrink-0 snap-center">

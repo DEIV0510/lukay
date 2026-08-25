@@ -1,8 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Procesa las fotos reales de Escritorio/LUKAY hacia public/products/<slug>/.
 // Fuente de verdad del agrupamiento: MANIFEST (mismo mapeo usado en
-// src/data/products.ts). No recorta ni retoca el producto: solo redimensiona
-// y comprime a WebP en 2 anchos (full para galería, card para grillas).
+// src/data/products.ts).
+//
+// Normalización de encuadre: las fotos originales traen cantidades de margen
+// MUY distintas alrededor del producto (unas son un acercamiento, otras
+// muestran el par completo con mucho fondo vacío), lo que hacía que el
+// calzado se viera de tamaños distintos tarjeta a tarjeta. Este script:
+//   1. Recorta un borde negro delgado (artefacto de exportación, ~4-8px).
+//   2. Recorta el fondo de estudio (uniforme, detectado automáticamente).
+//   3. Reencuadra el producto ya recortado sobre un lienzo fijo, ocupando
+//      siempre el mismo porcentaje del cuadro → tamaño aparente consistente.
+// No se toca el diseño/color del producto en ningún punto, solo el encuadre.
 // ─────────────────────────────────────────────────────────────────────────────
 import sharp from 'sharp'
 import { mkdir, readdir } from 'node:fs/promises'
@@ -15,11 +24,19 @@ const DEST_DIR = path.join(__dirname, '..', 'public', 'products')
 
 // slug > color id > archivos fuente en orden de galería
 const MANIFEST = {
-  'baleta-bow-terracota': {
+  // Verificado con la marca: "Baleta Bow Terracota" y la foto de portada de
+  // lo que antes era "Slingback Hebilla Aqua" (baletazul.png) son EL MISMO
+  // producto — solo cambia el color. baletaazul2.png es la misma silueta en
+  // un celeste más claro. Las otras 3 fotos del grupo aqua (slingack,
+  // slingback2, slinback3) son un zapato con hebilla totalmente distinto,
+  // sin moño — se separan en su propio producto.
+  'baleta-bow': {
     terracota: ['baleta.png', 'baleta2.png', 'baleta3.png', 'baleta4.png', 'baleta5.png'],
-  },
-  'baleta-bow-celeste': {
+    azul: ['baletazul.png'],
     celeste: ['baletaazul2.png'],
+  },
+  'slingback-hebilla-mint': {
+    mint: ['slingack.png', 'slingback2.png', 'slinback3.png'],
   },
   'baleta-fina-charol': {
     rojo: ['baletafinacharol.png', 'baletafinacharol2.png', 'baletafinacharol3.png'],
@@ -27,9 +44,6 @@ const MANIFEST = {
   },
   'baleta-peep-toe-flor': {
     vino: ['baletasintetica.png', 'baletasintetica2.png', 'baletasintetica3.png', 'baletasintetica4.png', 'baletasintetica5.png'],
-  },
-  'slingback-hebilla-aqua': {
-    aqua: ['baletazul.png', 'slingack.png', 'slingback2.png', 'slinback3.png'],
   },
   'slingback-animal-print': {
     leopardo: ['slingbackanimal.png', 'slingbackanimal2.png', 'slingbackanimal3.png', 'slingbackanimal4.png', 'slingbackanimal5.png'],
@@ -71,9 +85,37 @@ const MANIFEST = {
 }
 
 const SIZES = [
-  { suffix: 'full', width: 1100 },
-  { suffix: 'card', width: 560 },
+  { suffix: 'full', canvas: 1400, ratio: 5 / 4 }, // ancho x alto = canvas x canvas*ratio
+  { suffix: 'card', canvas: 800, ratio: 5 / 4 },
 ]
+const BORDER_INSET = 8 // px — borde negro delgado presente en casi todas las fotos originales
+const TRIM_THRESHOLD = 22
+const CONTENT_FILL = 0.86 // el producto ocupa ~86% del lienzo final
+const PAD_COLOR = '#F6F0E7' // marfil-soft — mismo tono que el fondo de las tarjetas del sitio
+
+async function normalizeToCanvas(srcPath, canvasW, canvasH) {
+  const meta = await sharp(srcPath).metadata()
+  const w = Math.max(1, meta.width - BORDER_INSET * 2)
+  const h = Math.max(1, meta.height - BORDER_INSET * 2)
+
+  const insetBuf = await sharp(srcPath)
+    .extract({ left: BORDER_INSET, top: BORDER_INSET, width: w, height: h })
+    .png()
+    .toBuffer()
+
+  // Materializar el buffer entre extract() y trim() es necesario: encadenados
+  // en un mismo pipeline, sharp/vips 0.33 no recalcula bien el bounding box.
+  const trimBuf = await sharp(insetBuf).trim({ threshold: TRIM_THRESHOLD }).png().toBuffer()
+
+  const innerW = Math.round(canvasW * CONTENT_FILL)
+  const innerH = Math.round(canvasH * CONTENT_FILL)
+
+  return sharp(trimBuf)
+    .resize(innerW, innerH, { fit: 'contain', background: PAD_COLOR })
+    .resize(canvasW, canvasH, { fit: 'contain', background: PAD_COLOR })
+    .webp({ quality: 88 })
+    .toBuffer()
+}
 
 async function run() {
   let total = 0
@@ -93,11 +135,11 @@ async function run() {
 
         for (const size of SIZES) {
           const destPath = path.join(outDir, `${base}-${size.suffix}.webp`)
+          const canvasW = size.canvas
+          const canvasH = Math.round(size.canvas * size.ratio)
           try {
-            await sharp(srcPath)
-              .resize({ width: size.width, withoutEnlargement: true })
-              .webp({ quality: 84 })
-              .toFile(destPath)
+            const buf = await normalizeToCanvas(srcPath, canvasW, canvasH)
+            await sharp(buf).toFile(destPath)
             total++
           } catch (err) {
             missing++
@@ -110,7 +152,7 @@ async function run() {
   }
 
   // Chequeo de cobertura: ¿algún archivo de origen quedó fuera del manifiesto?
-  const sourceFiles = (await readdir(SOURCE_DIR)).filter((f) => f.toLowerCase().endsWith('.png'))
+  const sourceFiles = (await readdir(SOURCE_DIR)).filter((f) => f.toLowerCase().endsWith('.png') && f.toLowerCase() !== 'logo.png' && f.toLowerCase() !== 'logomejor.png')
   const unused = sourceFiles.filter((f) => !used.has(f.toLowerCase()))
   if (unused.length) {
     console.warn(`\n⚠ ${unused.length} foto(s) de LUKAY no están en el manifiesto:`, unused)

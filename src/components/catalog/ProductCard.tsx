@@ -17,12 +17,12 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="group flex flex-col">
-      <Link to={`/producto/${product.slug}`} className="relative block overflow-hidden rounded-card bg-crema-dark/40">
+      <Link to={`/producto/${product.slug}`} className="relative block overflow-hidden rounded-card bg-marfil-soft">
         <div className="aspect-[4/5] w-full">
           <img
             src={image.card}
             alt={`${product.name} — ${color.name}`}
-            className="h-full w-full object-contain p-3 transition-opacity duration-300 sm:group-hover:opacity-0"
+            className="h-full w-full object-contain transition-opacity duration-300 sm:group-hover:opacity-0"
             loading="lazy"
             width={560}
             height={700}
@@ -32,7 +32,7 @@ export default function ProductCard({ product }: { product: Product }) {
               src={secondImage.card}
               alt=""
               aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-contain p-3 opacity-0 transition-opacity duration-300 sm:group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-300 sm:group-hover:opacity-100"
               loading="lazy"
             />
           )}

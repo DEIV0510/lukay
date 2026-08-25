@@ -13,7 +13,7 @@ export default function CategoryStrip() {
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {categories.map((c) => (
-          <Link key={c.id} to={`/coleccion/${c.slug}`} className="group relative block overflow-hidden rounded-card bg-crema-dark/40">
+          <Link key={c.id} to={`/coleccion/${c.slug}`} className="group relative block overflow-hidden rounded-card bg-marfil-soft">
             <div className="aspect-[3/4]">
               <img
                 src={c.cover}

@@ -44,7 +44,7 @@ export default function SocialSection() {
 
       <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:grid-cols-6">
         {gridImages.map((src) => (
-          <div key={src} className="aspect-square overflow-hidden rounded-card bg-crema-dark/40">
+          <div key={src} className="aspect-square overflow-hidden rounded-card bg-marfil-soft">
             <img src={src} alt="Calzado LUKAY" className="h-full w-full object-contain p-2.5" loading="lazy" />
           </div>
         ))}

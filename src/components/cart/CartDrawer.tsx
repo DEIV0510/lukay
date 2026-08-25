@@ -51,7 +51,7 @@ export default function CartDrawer() {
                     <Link
                       to={`/producto/${product.slug}`}
                       onClick={() => setCartOpen(false)}
-                      className="h-20 w-20 shrink-0 overflow-hidden rounded-card bg-crema-dark/40"
+                      className="h-20 w-20 shrink-0 overflow-hidden rounded-card bg-marfil-soft"
                     >
                       <img src={color.images[0].card} alt={product.name} className="h-full w-full object-contain p-1.5" />
                     </Link>

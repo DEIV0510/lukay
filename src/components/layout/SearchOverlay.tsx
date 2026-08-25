@@ -84,7 +84,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
                 onClick={onClose}
                 className="group flex flex-col gap-2"
               >
-                <div className="aspect-[4/5] overflow-hidden rounded-card bg-crema-dark/40">
+                <div className="aspect-[4/5] overflow-hidden rounded-card bg-marfil-soft">
                   <img
                     src={p.colors[0].images[0].card}
                     alt={p.name}
