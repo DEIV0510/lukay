@@ -119,6 +119,7 @@ export default function ProductPage() {
             ) : (
               <p className="mt-2 text-sm text-ink/70">Consultar tallas disponibles por WhatsApp.</p>
             )}
+            {product.sizeNote && <p className="mt-2 text-2xs text-taupe">{product.sizeNote}</p>}
           </div>
 
           <div className="mt-8 flex flex-col gap-3">

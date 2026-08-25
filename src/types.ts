@@ -24,6 +24,8 @@ export interface Product {
   /** Tallas reales disponibles, o null si no hay dato real → "Consultar tallas". */
   sizes: number[] | null
   soldOutSizes: number[]
+  /** Nota corta sobre tallas fuera del rango estándar, ej. "Talla 42 disponible sobre pedido". */
+  sizeNote?: string
   material: string
   heel: string
   closure: string

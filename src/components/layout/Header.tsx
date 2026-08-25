@@ -33,54 +33,56 @@ export default function Header() {
           scrolled ? 'shadow-[0_4px_24px_-8px_rgba(0,0,0,.5)]' : ''
         }`}
       >
-        <div className="container-lk flex h-16 items-center justify-between gap-4 sm:h-[72px]">
-          <button
-            type="button"
-            onClick={() => setNavOpen(true)}
-            aria-label="Abrir menú"
-            className="-ml-2 p-2 text-marfil lg:hidden"
-          >
-            <Menu size={22} />
-          </button>
+        <div className="container-lk grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4 sm:h-[72px]">
+          <div className="flex min-w-0 items-center gap-7">
+            <button
+              type="button"
+              onClick={() => setNavOpen(true)}
+              aria-label="Abrir menú"
+              className="-ml-2 p-2 text-marfil lg:hidden"
+            >
+              <Menu size={22} />
+            </button>
 
-          <nav className="hidden items-center gap-7 lg:flex">
-            {navLinks.slice(0, 3).map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.to === '/'}
-                className={({ isActive }) =>
-                  `text-2xs font-medium uppercase tracking-wideish text-marfil/75 transition-colors hover:text-gold-soft ${
-                    isActive ? 'text-gold-soft' : ''
-                  }`
-                }
-              >
-                {l.label}
-              </NavLink>
-            ))}
-          </nav>
+            <nav className="hidden items-center gap-7 lg:flex">
+              {navLinks.slice(0, 3).map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  end={l.to === '/'}
+                  className={({ isActive }) =>
+                    `text-2xs font-medium uppercase tracking-wideish text-marfil/75 transition-colors hover:text-gold-soft ${
+                      isActive ? 'text-gold-soft' : ''
+                    }`
+                  }
+                >
+                  {l.label}
+                </NavLink>
+              ))}
+            </nav>
+          </div>
 
-          <Link to="/" className="flex shrink-0 items-center" aria-label="LUKAY — Inicio">
+          <Link to="/" className="flex shrink-0 items-center justify-self-center" aria-label="LUKAY — Inicio">
             <img src="/brand/logo-compact.webp" alt="LUKAY" className="h-11 w-auto sm:h-12" width={1088} height={1040} />
           </Link>
 
-          <div className="hidden items-center gap-7 lg:flex">
-            {navLinks.slice(3).map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                className={({ isActive }) =>
-                  `text-2xs font-medium uppercase tracking-wideish text-marfil/75 transition-colors hover:text-gold-soft ${
-                    isActive ? 'text-gold-soft' : ''
-                  }`
-                }
-              >
-                {l.label}
-              </NavLink>
-            ))}
-          </div>
+          <div className="flex min-w-0 items-center justify-end gap-1 sm:gap-2">
+            <nav className="hidden items-center gap-7 lg:flex lg:mr-2">
+              {navLinks.slice(3).map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  className={({ isActive }) =>
+                    `text-2xs font-medium uppercase tracking-wideish text-marfil/75 transition-colors hover:text-gold-soft ${
+                      isActive ? 'text-gold-soft' : ''
+                    }`
+                  }
+                >
+                  {l.label}
+                </NavLink>
+              ))}
+            </nav>
 
-          <div className="flex items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={() => setSearchOpen(true)}
