@@ -7,11 +7,11 @@ export default function Editorial() {
   return (
     <section className="container-lk py-16 sm:py-24">
       <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-16">
-        <div className="aspect-[4/5] overflow-hidden rounded-card bg-crema-dark/40 lg:aspect-[3/4]">
+        <div className="aspect-[4/3] overflow-hidden rounded-card bg-crema-dark/40">
           <img
             src={EDITORIAL_IMAGE}
             alt="Slingback LUKAY en tejido texturizado, composición editorial"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-top"
             loading="lazy"
           />
         </div>
