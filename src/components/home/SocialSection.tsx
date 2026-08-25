@@ -3,7 +3,7 @@ import { site } from '@/data/site'
 const gridImages = [
   '/products/slingback-fina-cubano/animal-1-card.webp',
   '/products/baleta-peep-toe-flor/vino-2-card.webp',
-  '/products/slingback-mate-negro/negro-3-card.webp',
+  '/products/slingback-mate-nude/nude-3-card.webp',
   '/products/slingback-tacon-bow-bicolor/amarillo-4-card.webp',
   '/products/slingback-animal-print/leopardo-1-card.webp',
   '/products/baleta-fina-charol/rojo-1-card.webp',

@@ -76,8 +76,12 @@ const MANIFEST = {
     amarillo: ['slingbackfinataconbajo3.png', 'slingbackfinataconbajo4.png', 'slingbackfinataconbajo5.png', 'slingbackfinataconbajo6.png'],
     vino: ['slingbackfinataconbajo.png', 'slingbackfinataconbajo2.png'],
   },
-  'slingback-mate-negro': {
-    negro: ['slingbackmate.png', 'slingbackmate2.png', 'slingbackmate3.png', 'slingbackmate4.png', 'slingbackmate5.png', 'slingbackmate6.png'],
+  // Re-verificado foto a foto: NO es un zapato negro con moño (error del
+  // primer catalogado) — es un slingback nude/rosado con textura tejida y
+  // hebilla dorada, sin moño. Coincide con la ficha real "sintético mate con
+  // textura, color Nude, tacón 2cm" de la marca.
+  'slingback-mate-nude': {
+    nude: ['slingbackmate.png', 'slingbackmate2.png', 'slingbackmate3.png', 'slingbackmate4.png', 'slingbackmate5.png', 'slingbackmate6.png'],
   },
   'slingback-punta-nude': {
     nude: ['slingbackpunta.png', 'slingbackpunta2.png', 'slingbackpunta3.png'],
@@ -91,7 +95,38 @@ const SIZES = [
 const BORDER_INSET = 8 // px — borde negro delgado presente en casi todas las fotos originales
 const TRIM_THRESHOLD = 22
 const CONTENT_FILL = 0.86 // el producto ocupa ~86% del lienzo final
-const PAD_COLOR = '#F6F0E7' // marfil-soft — mismo tono que el fondo de las tarjetas del sitio
+const PAD_COLOR = '#F6F0E7' // marfil-soft — mismo tono en todas las fotos y en el fondo de las tarjetas
+const PAD_RGB = [246, 240, 231]
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v))
+}
+
+// El fondo de estudio de cada foto original varía de tono (más gris, más
+// cálido, más o menos expuesto) — antes solo se recortaba el margen exterior,
+// así que el fondo que quedaba DENTRO del recorte seguía viéndose distinto
+// foto a foto. Esto corrige el balance de color hacia PAD_COLOR usando el
+// propio fondo de la foto como referencia (mediana de 5 puntos junto a las
+// esquinas, para no depender de un único píxel). El ajuste es una escala
+// lineal suave (0.85–1.25) — nunca "borra" color, así que no daña productos
+// claros (crema, menta, amarillo mantequilla): solo empareja el fondo.
+async function sampleBackgroundRgb(buf, w, h) {
+  const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true })
+  const ch = info.channels
+  const pts = [
+    [6, 6],
+    [w - 6, 6],
+    [6, h - 6],
+    [w - 6, h - 6],
+    [Math.floor(w / 2), 4],
+  ]
+  const median = (arr) => [...arr].sort((a, b) => a - b)[Math.floor(arr.length / 2)]
+  const samples = pts.map(([x, y]) => {
+    const i = (y * w + x) * ch
+    return [data[i], data[i + 1], data[i + 2]]
+  })
+  return [0, 1, 2].map((c) => median(samples.map((s) => s[c])))
+}
 
 async function normalizeToCanvas(srcPath, canvasW, canvasH) {
   const meta = await sharp(srcPath).metadata()
@@ -103,9 +138,14 @@ async function normalizeToCanvas(srcPath, canvasW, canvasH) {
     .png()
     .toBuffer()
 
-  // Materializar el buffer entre extract() y trim() es necesario: encadenados
-  // en un mismo pipeline, sharp/vips 0.33 no recalcula bien el bounding box.
-  const trimBuf = await sharp(insetBuf).trim({ threshold: TRIM_THRESHOLD }).png().toBuffer()
+  const bgRgb = await sampleBackgroundRgb(insetBuf, w, h)
+  const scale = bgRgb.map((c, i) => clamp(PAD_RGB[i] / Math.max(c, 1), 0.85, 1.25))
+  const correctedBuf = await sharp(insetBuf).linear(scale, [0, 0, 0]).png().toBuffer()
+
+  // Materializar el buffer antes de trim() es necesario: encadenado en un
+  // mismo pipeline con extract()/linear(), sharp/vips 0.33 no recalcula bien
+  // el bounding box.
+  const trimBuf = await sharp(correctedBuf).trim({ threshold: TRIM_THRESHOLD }).png().toBuffer()
 
   const innerW = Math.round(canvasW * CONTENT_FILL)
   const innerH = Math.round(canvasH * CONTENT_FILL)
