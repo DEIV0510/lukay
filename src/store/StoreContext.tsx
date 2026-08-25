@@ -13,7 +13,6 @@ import { productBySlug } from '@/data/products'
 import type { CartEntry, CartLine, Product } from '@/types'
 
 const CART_KEY = 'lukay.cart.v1'
-const FAV_KEY = 'lukay.fav.v1'
 
 // ── Persistencia segura (Safari privado / localStorage bloqueado puede lanzar) ──
 function read<T>(key: string, fallback: T): T {

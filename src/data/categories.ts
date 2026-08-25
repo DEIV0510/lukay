@@ -37,7 +37,7 @@ export const categories: Category[] = [
     label: 'Tacones',
     short: 'Tacones',
     description: 'Elegancia con altura justa, sin sacrificar el paso.',
-    cover: '/products/slingback-tacon-amarillo/amarillo-1-card.webp',
+    cover: '/products/slingback-tacon-bow-bicolor/amarillo-1-card.webp',
   },
   {
     id: 'mocasines',

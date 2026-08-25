@@ -35,7 +35,13 @@ export function cartWhatsappLink(entries: CartEntry[]): string {
   }
 
   lines.push('')
-  lines.push(hasPending ? `Total estimado: $${total.toLocaleString('es-CO')} + productos a consultar` : `Total: $${total.toLocaleString('es-CO')}`)
+  if (hasPending && total === 0) {
+    lines.push('Todos los productos están sujetos a confirmación de precio.')
+  } else if (hasPending) {
+    lines.push(`Total estimado: $${total.toLocaleString('es-CO')} + productos a consultar`)
+  } else {
+    lines.push(`Total: $${total.toLocaleString('es-CO')}`)
+  }
   lines.push('')
   lines.push('Quiero confirmar disponibilidad y realizar mi pedido.')
 
