@@ -61,7 +61,7 @@ export default function Header() {
           </nav>
 
           <Link to="/" className="flex shrink-0 items-center" aria-label="LUKAY — Inicio">
-            <img src="/brand/logo-compact.webp" alt="LUKAY" className="h-11 w-auto sm:h-12" width={340} height={365} />
+            <img src="/brand/logo-compact.webp" alt="LUKAY" className="h-11 w-auto sm:h-12" width={1088} height={1040} />
           </Link>
 
           <div className="hidden items-center gap-7 lg:flex">
