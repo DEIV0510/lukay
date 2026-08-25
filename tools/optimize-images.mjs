@@ -98,34 +98,78 @@ const CONTENT_FILL = 0.86 // el producto ocupa ~86% del lienzo final
 const PAD_COLOR = '#F6F0E7' // marfil-soft — mismo tono en todas las fotos y en el fondo de las tarjetas
 const PAD_RGB = [246, 240, 231]
 
-function clamp(v, lo, hi) {
-  return Math.max(lo, Math.min(hi, v))
-}
+const SPREAD_MAX = 16 // spread=max-min entre canales; fondo/sombra ~3-10, producto pálido ~20+
+const LUM_DROP = 150 // qué tan oscuro puede ponerse una sombra y seguir contando como fondo
 
-// El fondo de estudio de cada foto original varía de tono (más gris, más
-// cálido, más o menos expuesto) — antes solo se recortaba el margen exterior,
-// así que el fondo que quedaba DENTRO del recorte seguía viéndose distinto
-// foto a foto. Esto corrige el balance de color hacia PAD_COLOR usando el
-// propio fondo de la foto como referencia (mediana de 5 puntos junto a las
-// esquinas, para no depender de un único píxel). El ajuste es una escala
-// lineal suave (0.85–1.25) — nunca "borra" color, así que no daña productos
-// claros (crema, menta, amarillo mantequilla): solo empareja el fondo.
-async function sampleBackgroundRgb(buf, w, h) {
-  const { data, info } = await sharp(buf).raw().toBuffer({ resolveWithObject: true })
-  const ch = info.channels
-  const pts = [
-    [6, 6],
-    [w - 6, 6],
-    [6, h - 6],
-    [w - 6, h - 6],
-    [Math.floor(w / 2), 4],
-  ]
-  const median = (arr) => [...arr].sort((a, b) => a - b)[Math.floor(arr.length / 2)]
-  const samples = pts.map(([x, y]) => {
-    const i = (y * w + x) * ch
-    return [data[i], data[i + 1], data[i + 2]]
-  })
-  return [0, 1, 2].map((c) => median(samples.map((s) => s[c])))
+// El fondo de estudio de cada foto varía de tono Y trae una sombra de
+// contacto suave bajo el producto — recortar solo el margen exterior dejaba
+// ese fondo/sombra interior con un tono distinto en cada foto. Esto lo
+// reemplaza por completo con PAD_COLOR usando "flood fill" desde los bordes:
+// 1) un píxel es "candidato a fondo" solo por su propio color (brillante Y
+//    poco saturado — un producto pálido como el amarillo mantequilla tiene
+//    más diferencia entre canales que un gris/sombra, así no se lo come);
+// 2) solo se reemplaza si además está CONECTADO al borde a través de otros
+//    candidatos, así un brillo aislado sobre el zapato (mismo tono que el
+//    fondo pero rodeado de zapato) no se toca.
+function floodFillBackground(data, w, h, ch, refLum, targetRGB) {
+  const n = w * h
+  const candidate = new Uint8Array(n)
+  for (let p = 0; p < n; p++) {
+    const i = p * ch
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const spread = Math.max(r, g, b) - Math.min(r, g, b)
+    const lum = (r + g + b) / 3
+    candidate[p] = spread <= SPREAD_MAX && lum >= refLum - LUM_DROP ? 1 : 0
+  }
+
+  // qx/qy deben poder guardar cada píxel varias veces (se encola desde hasta
+  // 8 vecinos antes de marcarlo) — con tamaño == n, TypedArray descarta
+  // escrituras fuera de rango EN SILENCIO y el flood fill se corta siempre
+  // en el mismo punto sin importar el umbral. De ahí el tamaño extra.
+  const queued = new Uint8Array(n)
+  const qx = new Int32Array(n * 8 + w * 2 + h * 2)
+  const qy = new Int32Array(qx.length)
+  let qHead = 0
+  let qTail = 0
+  const idx = (x, y) => y * w + x
+  const push = (x, y) => {
+    const id = idx(x, y)
+    if (queued[id]) return
+    queued[id] = 1
+    qx[qTail] = x
+    qy[qTail] = y
+    qTail++
+  }
+  for (let x = 0; x < w; x++) {
+    push(x, 0)
+    push(x, h - 1)
+  }
+  for (let y = 0; y < h; y++) {
+    push(0, y)
+    push(w - 1, y)
+  }
+
+  while (qHead < qTail) {
+    const x = qx[qHead]
+    const y = qy[qHead]
+    qHead++
+    const id = idx(x, y)
+    if (!candidate[id]) continue
+    const i = id * ch
+    data[i] = targetRGB[0]
+    data[i + 1] = targetRGB[1]
+    data[i + 2] = targetRGB[2]
+    const neigh = [
+      [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1],
+      [x - 1, y - 1], [x + 1, y - 1], [x - 1, y + 1], [x + 1, y + 1],
+    ]
+    for (const [nx, ny] of neigh) {
+      if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue
+      push(nx, ny)
+    }
+  }
 }
 
 async function normalizeToCanvas(srcPath, canvasW, canvasH) {
@@ -133,19 +177,27 @@ async function normalizeToCanvas(srcPath, canvasW, canvasH) {
   const w = Math.max(1, meta.width - BORDER_INSET * 2)
   const h = Math.max(1, meta.height - BORDER_INSET * 2)
 
-  const insetBuf = await sharp(srcPath)
+  const { data, info } = await sharp(srcPath)
     .extract({ left: BORDER_INSET, top: BORDER_INSET, width: w, height: h })
-    .png()
-    .toBuffer()
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
 
-  const bgRgb = await sampleBackgroundRgb(insetBuf, w, h)
-  const scale = bgRgb.map((c, i) => clamp(PAD_RGB[i] / Math.max(c, 1), 0.85, 1.25))
-  const correctedBuf = await sharp(insetBuf).linear(scale, [0, 0, 0]).png().toBuffer()
+  // referencia de fondo: mediana de 5 puntos junto a las esquinas
+  const pts = [[8, 8], [w - 8, 8], [8, h - 8], [w - 8, h - 8], [Math.floor(w / 2), 6]]
+  const median = (arr) => [...arr].sort((a, b) => a - b)[Math.floor(arr.length / 2)]
+  const refLum = median(pts.map(([x, y]) => {
+    const i = (y * w + x) * info.channels
+    return (data[i] + data[i + 1] + data[i + 2]) / 3
+  }))
+
+  floodFillBackground(data, w, h, info.channels, refLum, PAD_RGB)
+  const flatBuf = await sharp(data, { raw: { width: w, height: h, channels: info.channels } }).png().toBuffer()
 
   // Materializar el buffer antes de trim() es necesario: encadenado en un
-  // mismo pipeline con extract()/linear(), sharp/vips 0.33 no recalcula bien
+  // mismo pipeline con extract()/raw(), sharp/vips 0.33 no recalcula bien
   // el bounding box.
-  const trimBuf = await sharp(correctedBuf).trim({ threshold: TRIM_THRESHOLD }).png().toBuffer()
+  const trimBuf = await sharp(flatBuf).trim({ threshold: TRIM_THRESHOLD }).png().toBuffer()
 
   const innerW = Math.round(canvasW * CONTENT_FILL)
   const innerH = Math.round(canvasH * CONTENT_FILL)
